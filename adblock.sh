@@ -168,7 +168,8 @@ printFileSize ()
 restart_dnsmasq ()
 {
 	logger ">>> $(basename "$0") restarting dnsmasq"
-	restart_dns &
+	stopservice dnsmasq
+	startservice dnsmasq
 	logger ">>> $(basename "$0") restarted dnsmasq"
 }
 
@@ -585,9 +586,7 @@ lognecho "# Number of ad hosts blocked: approx $numHostsBlocked"
 numDomainsBlocked=$(cat $mpdomains | wc -l | sed 's/^[ \t]*//')
 lognecho "# Number of ad domains blocked: approx $numDomainsBlocked"
 
-lognecho "> Restarting DNS server (dnsmasq)"
-# restart_dnsmasq
-killall -HUP dnsmasq
+restart_dnsmasq
 
 TIMERSTOP=`date +%s`
 RTMINUTES=$(( $((TIMERSTOP - TIMERSTART)) /60 ))
