@@ -1,2 +1,2 @@
 # adblock.sh
-Ad block for DD-WRT (and others)
+Adblock for DD-WRT (and others)
