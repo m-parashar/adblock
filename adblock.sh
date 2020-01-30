@@ -319,7 +319,7 @@ selfUpdate ()
 }
 
 ###############################################################################
-export CMDARGS=("$@")
+export CMDARGS="$@"
 
 # process command line arguments
 while getopts "h?v0123fFdDpPqQrRsSoOuUb:w:i:-:" opt; do
