@@ -418,7 +418,7 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 	printAndLog "# BLITZ LEVEL [0|1|2|3]: $BLITZ"
 
 	if [ ! -s cacert.pem ] || { [ "${DAYOFWEEK}" -eq 1 ] || [ "${DAYOFWEEK}" -eq 4 ]; }; then
-		printAndLog "> Downloading / updating cURL certificates"
+		printAndLog ">>> Downloading / updating cURL certificate"
 		MPGETSSL --remote-name --time-cond cacert.pem https://curl.haxx.se/ca/cacert.pem
 	fi
 
