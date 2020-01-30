@@ -319,6 +319,7 @@ selfUpdate ()
 }
 
 ###############################################################################
+export CMDARGS=("$@")
 
 # process command line arguments
 while getopts "h?v0123fFdDpPqQrRsSoOuUb:w:i:-:" opt; do
@@ -391,7 +392,7 @@ printAndLog "|           Copyright $PRY Manish Parashar           |"
 printAndLog "======================================================"
 printAndLog "             `date`"
 printAndLog "# VERSION: $VERSION"
-printAndLog "# CMDARGS: $@"
+printAndLog "# CMDARGS: $CMDARGS"
 
 ###############################################################################
 
