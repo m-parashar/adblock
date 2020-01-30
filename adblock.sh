@@ -35,7 +35,7 @@
 # 0 6 * * 1,4 root /jffs/dnsmasq/adblock.sh
 #
 
-VERSION="20200127"
+VERSION="20200130"
 
 ###############################################################################
 
@@ -107,9 +107,12 @@ else
 fi
 
 # log file
-export LOGFILE="${MPDIR}/adblock.log"
+export LOGFILE="${MPDIR}/log.adblock"
 #[ -s $LOGFILE ] && rm -f $LOGFILE
 [ ! -f $LOGFILE ] && touch $LOGFILE
+export DEBUG=0
+export ERRLOG="${MPDIR}/log.adblock.errors"
+[ ! -f $ERRLOG ] && touch $ERRLOG
 
 # dnsmasq hosts & domain files
 export mphosts="${MPDIR}/mphosts"
@@ -261,6 +264,7 @@ printHelp ()
 	printf '\t'; echo -n "[-b | --bl=]"; echo -n "domain.name"; printf '\t\t'; echo "Add domain.name to myblacklist"
 	printf '\t'; echo -n "[-w | --wl=]"; echo -n "domain.name"; printf '\t\t'; echo "Add domain.name to mywhitelist"
 	printf '\t'; echo -n "[-i | --ip=]"; echo -n "ip.ad.dr.ss"; printf '\t\t'; echo "Send ads to this IP; default: $ADHOLE_IP"
+	printf '\t'; echo -n "[-q | --debug]"; printf '\t\t\t'; echo "Log errors to STDOUT and $ERRLOG"
 	printf '\t'; echo -n "[-q | --quiet]"; printf '\t\t\t'; echo "Print outout to log file only"
 	printf '\t'; echo -n "[-p | --pause]"; printf '\t\t\t'; echo "Pause protection"
 	printf '\t'; echo -n "[-r | --resume]"; printf '\t\t\t'; echo "Resume protection"
@@ -349,6 +353,7 @@ while getopts "h?v0123fFdDpPqQrRsSoOuUb:w:i:-:" opt; do
 						  REMOTE_MODE=1 ;;
 			remote*     ) echo ">>> ERROR: no arguments for --$OPTARG option" >&2; exit 2 ;;
 			quiet   ) QUIET=1 ;;
+			debug   ) DEBUG=1 ;;
 			pause   ) protectOff ;;
 			resume  ) protectOn ;;
 			secure  ) SECURL=1 ;;
@@ -356,7 +361,7 @@ while getopts "h?v0123fFdDpPqQrRsSoOuUb:w:i:-:" opt; do
 			help    ) printHelp ;;
 			update  ) selfUpdate ;;
 			version ) echo "$VERSION" ; logger ">>> $(basename "$0") finished" ; exit 0 ;;
-			quiet* | pause* | resume* | secure* | offline* | help* | update* | version* | remote* )
+			quiet* | debug* | pause* | resume* | secure* | offline* | help* | update* | version* )
 			echo ">>> ERROR: no arguments allowed for --$OPTARG option" >&2; exit 2 ;;
 			'' )    break ;; # "--" terminates argument processing
 			* )     echo ">>> ERROR: unsupported option --$OPTARG" >&2; exit 2 ;;
@@ -368,6 +373,12 @@ done
 shift $((OPTIND-1)) # remove parsed options and args from $@ list
 
 ###############################################################################
+
+# log errors if DEBUG is ON
+if [ $DEBUG -eq 1 ]; then
+	exec 2<&-
+	exec 2<>$ERRLOG
+fi
 
 # display banner
 TIMERSTART=`date +%s`
