@@ -391,6 +391,7 @@ printAndLog "|           Copyright $PRY Manish Parashar           |"
 printAndLog "======================================================"
 printAndLog "             `date`"
 printAndLog "# VERSION: $VERSION"
+printAndLog "# CMDARGS: $@"
 
 ###############################################################################
 
