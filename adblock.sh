@@ -187,21 +187,21 @@ printAndLog ()
 # Remote router operations
 downloadRemote ()
 {
-	printAndLog "> Downloading files from router ..."
+	printAndLog ">>> Downloading files from router..."
 	scp $REMOTE_USER@$REMOTE_IP:"$REMOTE_DIR/my*list" $MPDIR
 }
 
 # upload blocklists to the remote system
 uploadRemote ()
 {
-	printAndLog "> Uploading files to router ..."
+	printAndLog ">>> Uploading files to router..."
 	scp $MPDIR/mpdomains $MPDIR/mphosts $MPDIR/my*list $REMOTE_USER@$REMOTE_IP:$REMOTE_DIR
 }
 
 # print file size
 printFileSize ()
 {
-	printAndLog "# Size of $1: `du -h $1 | awk '{print $1}'`"
+	printAndLog ">>> Size of $1: `du -h $1 | awk '{print $1}'`"
 }
 
 # restart dnsmasq
@@ -422,12 +422,12 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 		MPGETSSL --remote-name --time-cond cacert.pem https://curl.haxx.se/ca/cacert.pem
 	fi
 
-	printAndLog "# Creating mpdomains file"
+	printAndLog ">>> Creating mpdomains file"
 	MPGETSSL https://raw.githubusercontent.com/oznu/dns-zone-blacklist/master/dnsmasq/dnsmasq.blacklist | GREPFILTER | sed 's/0.0.0.0$/'$ADHOLE_IP'/' > $tmpdomains
 	MPGETSSL https://raw.githubusercontent.com/notracking/hosts-blocklists/master/domains.txt | GREPFILTER | sed 's/0.0.0.0$/'$ADHOLE_IP'/' >> $tmpdomains
 	MPGETSSL -d mimetype=plaintext -d hostformat=dnsmasq https://pgl.yoyo.org/adservers/serverlist.php? | GREPFILTER | sed 's/127.0.0.1$/'$ADHOLE_IP'/' >> $tmpdomains
 
-	printAndLog "# Creating mphosts file"
+	printAndLog ">>> Creating mphosts file"
 	printAndLog "> Processing StevenBlack lists"
 	MPGETSSL https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts | GREPFILTER | awk '{print $2}' > $tmphosts
 
@@ -452,7 +452,7 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 	MPGETSSL https://adaway.org/hosts.txt | GREPFILTER | awk '{print $2}' >> $tmphosts
 
 	if [ $BLITZ -ge 1 ]; then
-		printAndLog "# Unlocking BLITZ=1 level lists"
+		printAndLog ">>> Unlocking BLITZ=1 level lists"
 
 		printAndLog "> Processing more StevenBlack lists"
 		MPGETSSL https://raw.githubusercontent.com/StevenBlack/hosts/master/data/add.2o7Net/hosts | GREPFILTER | awk '{print $2}' >> $tmphosts
@@ -500,7 +500,7 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 	fi
 
 	if [ $BLITZ -ge 2 ]; then
-		printAndLog "# Unlocking BLITZ=2 level lists"
+		printAndLog ">>> Unlocking BLITZ=2 level lists"
 
 		printAndLog "> Processing even more StevenBlack lists"
 		MPGETSSL https://raw.githubusercontent.com/StevenBlack/hosts/master/data/KADhosts/hosts | GREPFILTER | awk '{print $2}' >> $tmphosts
@@ -557,7 +557,7 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 	fi
 
 	if [ $BLITZ -ge 3 ]; then
-		printAndLog "# Unlocking BLITZ=3 level lists"
+		printAndLog ">>> Unlocking BLITZ=3 level lists"
 
 		printAndLog "> Processing hosts-file PSH/PUP/WRZ lists"
 		MPGETSSL https://hosts-file.net/psh.txt | GREPFILTER | awk '{print $2}' >> $tmphosts
@@ -583,7 +583,7 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 		MPGETSSL https://raw.githubusercontent.com/m-parashar/adblock/master/blacklists/facebookall.block >> $tmphosts
 	fi
 
-	printAndLog "> Updating official blacklist/whitelist files"
+	printAndLog ">>> Updating official blacklist/whitelist files"
 	MPGETSSL https://raw.githubusercontent.com/m-parashar/adblock/master/blacklists/blacklist | GREPFILTER > $blacklist
 	MPGETSSL https://raw.githubusercontent.com/m-parashar/adblock/master/whitelists/whitelist | GREPFILTER > $whitelist
 	if [ ! -z "$(which uudecode)" ]; then
@@ -621,7 +621,7 @@ printFileSize $tmphosts
 printFileSize $tmpdomains
 
 # remove duplicates and extra whitespace, sort alphabetically
-printAndLog "> Processing blacklist/whitelist files"
+printAndLog ">>> Processing blacklist/whitelist files"
 LC_ALL=C cat $blacklist | SEDCLEAN | sort | uniq > tmpbl && cp tmpbl $blacklist
 LC_ALL=C cat $whitelist | SEDCLEAN | sort | uniq > tmpwl && cp tmpwl $whitelist
 
@@ -629,7 +629,7 @@ LC_ALL=C cat $whitelist | SEDCLEAN | sort | uniq > tmpwl && cp tmpwl $whitelist
 # remove duplicates and extra whitespace, sort alphabetically
 # and allow users' myblacklist precedence over defaults
 if [ $DISTRIB -eq 0 ] && { [ -s "$myblacklist" ] || [ -s "$mywhitelist" ]; }; then
-	printAndLog "> Processing myblacklist/mywhitelist files"
+	printAndLog ">>> Processing myblacklist/mywhitelist files"
 	LC_ALL=C cat $myblacklist | SEDCLEAN | sort | uniq > tmpmybl && mv tmpmybl $myblacklist
 	LC_ALL=C cat $mywhitelist | SEDCLEAN | sort | uniq > tmpmywl && mv tmpmywl $mywhitelist
 	cat $blacklist | cat $myblacklist - > tmpbl
@@ -639,11 +639,11 @@ fi
 # trim leading and trailig whitespace, delete all blank lines including the ones with whitespace
 # remove non-printable non-ASCII characters because DD-WRT dnsmasq throws "bad name at line n" errors
 # merge blacklists with other lists and remove whitelist entries from the stream
-printAndLog "> Processing final mphosts/mpdomains files"
+printAndLog ">>> Processing final mphosts/mpdomains files"
 LC_ALL=C cat $tmphosts | SEDCLEAN | cat tmpbl - | grep -Fvwf tmpwl | sort | uniq | awk -v "IP=$ADHOLE_IP" '{sub(/\r$/,""); print IP" "$0}' > $mphosts
 LC_ALL=C cat $tmpdomains | SEDCLEAN | grep -Fvwf tmpwl | sort | uniq > $mpdomains
 
-printAndLog "> Removing temporary files"
+printAndLog ">>> Removing temporary files"
 rm -f $tmphosts
 rm -f $tmpdomains
 rm -f tmpbl
