@@ -20,12 +20,12 @@ Installation
 ------------
 + On router
   1. `cd /jffs/dnsmasq`
-  2. `curl -o adblock.sh adblock.sh`
+  2. `curl -o adblock.sh adblock.sh` or `wget -O adblock.sh adblock.sh`
   3. `chmod +x adblock.sh`
   4. Optional: create `myblacklist` and `mywhitelist` files in the same directory and populate these with domains you want to blacklist or whitelist.
 + On a Linux system within the same network
   1. `mkdir adblock`
-  2. `curl -o adblock.sh adblock.sh`
+  2. `curl -o adblock.sh adblock.sh` or `wget -O adblock.sh adblock.sh`
   3. `chmod +x adblock.sh`
   4. Use the `--remote=` command line argument to upload the lists to your router after generating locally.
 
