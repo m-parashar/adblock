@@ -1,15 +1,27 @@
 # adblock.sh
+---------
 Adblock for DD-WRT (and other POSIX systems)
 
+**Table of Contents**
+
+[TOCM]
+
+[TOC]
+#Requirements
+##Installation
+###Configuration
+####Screenshots
+#####Links
+
 Requirements
----------------
+------------
 1. DD-WRT on a router with USB port(s) and USB support enabled
 2. curl (for best protection)
 3. wget (fallback supported)
 4. a USB flash drive partitioned as /jffs and /opt, optionally a swap partition as well.
 
 Installation
----------------
+------------
 + On router
   1. `cd /jffs/dnsmasq`
   2. `curl -o adblock.sh adblock.sh`
@@ -22,7 +34,7 @@ Installation
   4. Use the `--remote=` command line argument to upload the lists to your router after generating locally.
 
 Configuration
-----------------
+-------------
 1. Enable DNSMasq and local DNS for LAN and WAN. Add these lines under the additional options section.
 ```shell
 conf-file=/jffs/dnsmasq/mpdomains
@@ -40,7 +52,7 @@ bogus-priv
 4. Reboot after generating the lists.
 
 Screenshots
---------------
+-----------
 
 ![usb](https://i.imgur.com/xT7Wgp4.png)
 
@@ -50,3 +62,8 @@ Screenshots
 
 ![helpoptions](https://i.imgur.com/Uf2D5Om.png)
 
+Links
+-----
+`<Website>` : <https://adblock.sh>
+
+`<DD-WRT Forum Post>` : <https://forum.dd-wrt.com/phpBB2/viewtopic.php?t=307533>
