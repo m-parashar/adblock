@@ -56,7 +56,7 @@ Screenshots
 
 ![cron](https://i.imgur.com/yUpTGbJ.png)
 
-![helpoptions](https://i.imgur.com/Uf2D5Om.png)
+![helpoptions](https://i.imgur.com/NXfmBRb.png)
 
 Links
 -----
