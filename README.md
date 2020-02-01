@@ -2,17 +2,13 @@
 ---------
 Adblock for DD-WRT (and other POSIX systems)
 
-**Table of Contents**
-
-[TOCM]
-
-[TOC]
-#Requirements
-##Installation
-###Configuration
-####Screenshots
-#####Links
-
+- [adblock.sh](#adblocksh)
+  * [Requirements](#requirements)
+  * [Installation](#installation)
+  * [Configuration](#configuration)
+  * [Screenshots](#screenshots)
+  * [Links](#links)
+  
 Requirements
 ------------
 1. DD-WRT on a router with USB port(s) and USB support enabled
