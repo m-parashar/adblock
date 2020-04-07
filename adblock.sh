@@ -35,7 +35,7 @@
 # 0 6 * * 1,4 root /jffs/dnsmasq/adblock.sh
 #
 
-VERSION="20200201"
+VERSION="20200407"
 
 ###############################################################################
 
@@ -107,7 +107,7 @@ else
 fi
 
 # log file
-export LOGFILE="${MPDIR}/log.adblock"
+export LOGFILE="${MPDIR}/adblock.log"
 [ ! -f $LOGFILE ] && touch $LOGFILE
 
 # dnsmasq hosts & domain files
@@ -175,17 +175,24 @@ logger "[INFO] $(basename "$0") started"
 
 ###############################################################################
 
+# echo & log
+lognecho ()
+{
+	echo "$1"
+	echo "$1" >> $LOGFILE
+}
+
 # Remote router operations
 downloadRemote ()
 {
-	echo "[PROC] Downloading files from router..."
+	lognecho "[PROC] Downloading files from router..."
 	scp $REMOTE_USER@$REMOTE_IP:"$REMOTE_DIR/my*list" $MPDIR
 }
 
 # upload blocklists to the remote system
 uploadRemote ()
 {
-	echo "[PROC] Uploading files to router..."
+	lognecho "[PROC] Uploading files to router..."
 	scp $MPDIR/mpdomains $MPDIR/mphosts $MPDIR/my*list $REMOTE_USER@$REMOTE_IP:$REMOTE_DIR
 }
 
@@ -193,7 +200,7 @@ uploadRemote ()
 getcURLCerts ()
 {
 	if [ ! -s cacert.pem ] || { [ "${DAYOFWEEK}" -eq 1 ] || [ "${DAYOFWEEK}" -eq 4 ]; }; then
-		echo "[PROC] Downloading / updating cURL certificate"
+		lognecho "[PROC] Downloading / updating cURL certificate"
 		MPGETSSL --remote-name --time-cond cacert.pem https://curl.haxx.se/ca/cacert.pem
 	fi
 }
@@ -201,7 +208,7 @@ getcURLCerts ()
 # print file size
 printFileSize ()
 {
-	echo "[INFO] Size of $1: `du -h $1 | awk '{print $1}'`"
+	lognecho "[INFO] Size of $1: `du -h $1 | awk '{print $1}'`"
 }
 
 # restart dnsmasq
@@ -220,7 +227,7 @@ restartDnsmasq ()
 protectOn ()
 {
 	if [ -f $PAUSE_FLAG ] && { [ -f $MPHOSTS_PAUSED ] || [ -f $MPDOMAINS_PAUSED ]; }; then
-		echo "[INFO] RESUMING PROTECTION"
+		lognecho "[INFO] RESUMING PROTECTION"
 		mv $MPHOSTS_PAUSED $MPHOSTS
 		mv $MPDOMAINS_PAUSED $MPDOMAINS
 		rm -f $PAUSE_FLAG
@@ -233,14 +240,14 @@ protectOn ()
 # pause protection
 protectOff ()
 {
-	echo "[WARNING] PAUSING PROTECTION"
+	lognecho "[WARNING] PAUSING PROTECTION"
 	[ -f $MPHOSTS ] && mv $MPHOSTS $MPHOSTS_PAUSED
 	[ -f $MPDOMAINS ] && mv $MPDOMAINS $MPDOMAINS_PAUSED
 	echo "" > $MPHOSTS
 	echo "" > $MPDOMAINS
 	echo "PAUSED" > $PAUSE_FLAG
 	restartDnsmasq
-	echo "[INFO] Type $(basename "$0") --resume to resume protection."
+	lognecho "[INFO] Type $(basename "$0") --resume to resume protection."
 	logger "[INFO] $(basename "$0") finished"
 	exit 0
 }
@@ -288,7 +295,7 @@ selfUpdate ()
 {
 	TMPFILE="/tmp/mpupdate"
 
-	echo "[PROC] Checking for updates."
+	lognecho "[PROC] Checking for updates."
 
 	if ping -q -c 1 -W 1 $PING_TARGET >/dev/null; then
 		MPGETSSL https://raw.githubusercontent.com/m-parashar/adblock/master/$(basename "$0") > $TMPFILE
@@ -299,17 +306,17 @@ selfUpdate ()
 
 			if [ "$old_md5" != "$new_md5" ]; then
 				NEWVER=`grep -w -m 1 "VERSION" $TMPFILE`
-				echo "[INFO] Update available: $NEWVER"
+				lognecho "[INFO] Update available: $NEWVER"
 				OLDVER=`grep -w -m 1 "VERSION" $0 | cut -d \" -f2`
 				cp $0 $0.$OLDVER
 				chmod 755 $TMPFILE
 				mv $TMPFILE $0
-				echo "[INFO] Updated to the latest version."
+				lognecho "[INFO] Updated to the latest version."
 			else
-				echo "[INFO] No updates available."
+				lognecho "[INFO] No updates available."
 			fi
 		else
-			echo "[ERROR] Update failed. Try again."
+			lognecho "[ERROR] Update failed. Try again."
 		fi
 		rm -f $TMPFILE
 	fi
@@ -375,7 +382,6 @@ shift $((OPTIND-1)) # remove parsed options and args from $@ list
 
 ###############################################################################
 
-(
 if [ $FORCEWGET -eq 1 ]; then
 	SECURL=0
 	unalias MPGET && alias MPGET="wget -qO- "
@@ -386,38 +392,38 @@ fi
 # display banner
 TIMERSTART=`date +%s`
 PRY=`date +%Y`
-echo "======================================================"
-echo "|                 adblock for DD-WRT                 |"
-echo "|                 https://adblock.sh                 |"
-echo "|       https://github.com/m-parashar/adblock        |"
-echo "|           Copyright $PRY Manish Parashar           |"
-echo "======================================================"
-echo "             `date`"
-echo "[INFO] VERSION: $VERSION"
-echo "[INFO] CMDARGS: $CMDARGS"
+lognecho "======================================================"
+lognecho "|                 adblock for DD-WRT                 |"
+lognecho "|                 https://adblock.sh                 |"
+lognecho "|       https://github.com/m-parashar/adblock        |"
+lognecho "|           Copyright $PRY Manish Parashar           |"
+lognecho "======================================================"
+lognecho "             `date`"
+lognecho "[INFO] VERSION: $VERSION"
+lognecho "[INFO] CMDARGS: $CMDARGS"
 
 ###############################################################################
 
 # force resume if user forgets to turn it back on
 if [ -f $PAUSE_FLAG ] && { [ -f $MPHOSTS_PAUSED ] || [ -f $MPDOMAINS_PAUSED ]; }; then
-	echo "# USER FORGOT TO RESUME PROTECTION AFTER PAUSING"
+	lognecho "# USER FORGOT TO RESUME PROTECTION AFTER PAUSING"
 	protectOn
 fi
 
 ###############################################################################
 # download files from router if REMOTE: ON
 if [ $REMOTE_MODE -eq 1 ]; then
-	echo "# REMOTE: ON | IP: $REMOTE_IP"
+	lognecho "# REMOTE: ON | IP: $REMOTE_IP"
 	downloadRemote
 fi
 
 # if internet is accessible, download files
 if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 
-	echo "[INFO] NETWORK: UP | MODE: ONLINE"
-	echo "[INFO] IP ADDRESS FOR ADS: $ADHOLE_IP"
-	echo "[INFO] SECURE [0=NO | 1=YES]: $SECURL"
-	echo "[INFO] BLITZ LEVEL [0|1|2|3]: $BLITZ"
+	lognecho "[INFO] NETWORK: UP | MODE: ONLINE"
+	lognecho "[INFO] IP ADDRESS FOR ADS: $ADHOLE_IP"
+	lognecho "[INFO] SECURE [0=NO | 1=YES]: $SECURL"
+	lognecho "[INFO] BLITZ LEVEL [0|1|2|3]: $BLITZ"
 
 	# log errors if DEBUG is ON
 	if [ $DEBUG -eq 1 ]; then
@@ -428,70 +434,61 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 		getcURLCerts
 	fi
 
-	echo "[PROC] Creating mpdomains file"
+	lognecho "[PROC] Creating mpdomains file"
 	MPGETSSL "https://raw.githubusercontent.com/oznu/dns-zone-blacklist/master/dnsmasq/dnsmasq.blacklist" | GREPFILTER | sed 's/0.0.0.0$/'$ADHOLE_IP'/' > $TMPDOMAINS
 	MPGETSSL "https://raw.githubusercontent.com/notracking/hosts-blocklists/master/domains.txt" | GREPFILTER | sed 's/0.0.0.0$/'$ADHOLE_IP'/' >> $TMPDOMAINS
 	MPGETSSL "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=dnsmasq&showintro=0&mimetype=plaintext" | GREPFILTER | sed 's/127.0.0.1$/'$ADHOLE_IP'/' >> $TMPDOMAINS
 
-	echo "[PROC] Creating mphosts file"
-	echo "[PROC] Processing StevenBlack lists"
+	lognecho "[PROC] Creating mphosts file"
+	lognecho "[PROC] Processing StevenBlack lists"
 	MPGETSSL "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" | GREPFILTER | AWKFILTER > $TMPHOSTS
 
-	echo "[PROC] Processing notracking blocklists"
+	lognecho "[PROC] Processing notracking blocklists"
 	MPGETSSL "https://raw.githubusercontent.com/notracking/hosts-blocklists/master/hostnames.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-	echo "[PROC] Processing Disconnect.me lists"
+	lognecho "[PROC] Processing Disconnect.me lists"
 	MPGETSSL "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt" | GREPFILTER >> $TMPHOSTS
 	MPGETSSL "https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt" | GREPFILTER >> $TMPHOSTS
 	MPGETSSL "https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt" | GREPFILTER >> $TMPHOSTS
 	MPGETSSL "https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt" | GREPFILTER >> $TMPHOSTS
 
-	echo "[PROC] Processing quidsup/notrack lists"
+	lognecho "[PROC] Processing quidsup/notrack lists"
 	MPGETSSL "https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-blocklist.txt" | GREPFILTER >> $TMPHOSTS
 	MPGETSSL "https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-malware.txt" | GREPFILTER >> $TMPHOSTS
 
-	echo "[PROC] Processing MalwareDomains lists"
+	lognecho "[PROC] Processing MalwareDomains lists"
 	MPGETSSL "https://mirror1.malwaredomains.com/files/justdomains" | GREPFILTER >> $TMPHOSTS
 	MPGETSSL "https://mirror1.malwaredomains.com/files/immortal_domains.txt" | GREPFILTER >> $TMPHOSTS
 
-	echo "[PROC] Processing adaway list"
+	lognecho "[PROC] Processing adaway list"
 	MPGETSSL "https://adaway.org/hosts.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
 	if [ $BLITZ -ge 1 ]; then
-		echo "[PROC] Unlocking BLITZ=1 level lists"
+		lognecho "[PROC] Unlocking BLITZ=1 level lists"
 
-		echo "[PROC] Processing more StevenBlack lists"
+		lognecho "[PROC] Processing more StevenBlack lists"
 		MPGETSSL "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/add.2o7Net/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/add.Risk/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/add.Spam/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing hosts-file ATS/EXP/GRM lists"
-		MPGETSSL "https://hosts-file.net/ad_servers.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://hosts-file.net/exp.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://hosts-file.net/grm.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-
-		echo "[PROC] Processing hosts-file HJK/PUP lists"
-		MPGETSSL "https://hosts-file.net/hjk.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://hosts-file.net/pup.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-
-		echo "[PROC] Processing dshield lists"
+		lognecho "[PROC] Processing dshield lists"
 		MPGETSSL "https://www.dshield.org/feeds/suspiciousdomains_High.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://www.dshield.org/feeds/suspiciousdomains_Medium.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://www.dshield.org/feeds/suspiciousdomains_Low.txt" | GREPFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing pgl.yoyo.org list"
+		lognecho "[PROC] Processing pgl.yoyo.org list"
 		MPGETSSL "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=unixhosts&showintro=0&mimetype=plaintext" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing Securemecca list"
+		lognecho "[PROC] Processing Securemecca list"
 		MPGETSSL "https://hostsfile.org/Downloads/hosts.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing cryptomining and porn lists"
+		lognecho "[PROC] Processing cryptomining and porn lists"
 		MPGETSSL "https://raw.githubusercontent.com/Marfjeh/coinhive-block/master/domains" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://zerodot1.gitlab.io/CoinBlockerLists/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/hosts.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/chadmayfield/my-pihole-blocklists/master/lists/pi_blocklist_porn_top1m.list" | GREPFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing Easylist & w3kbl lists"
+		lognecho "[PROC] Processing Easylist & w3kbl lists"
 		MPGETSSL "https://v.firebog.net/hosts/AdguardDNS.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://v.firebog.net/hosts/Airelle-hrsk.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://v.firebog.net/hosts/Airelle-trc.txt" | GREPFILTER >> $TMPHOSTS
@@ -506,54 +503,46 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 	fi
 
 	if [ $BLITZ -ge 2 ]; then
-		echo "[PROC] Unlocking BLITZ=2 level lists"
+		lognecho "[PROC] Unlocking BLITZ=2 level lists"
 
-		echo "[PROC] Processing even more StevenBlack lists"
+		lognecho "[PROC] Processing even more StevenBlack lists"
 		MPGETSSL "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/KADhosts/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/UncheckyAds/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing hosts-file EMD/FSA lists"
-		MPGETSSL "https://hosts-file.net/emd.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://hosts-file.net/fsa.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-
-		echo "[PROC] Processing hosts-file MMT/PHA lists"
-		MPGETSSL "https://hosts-file.net/mmt.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://hosts-file.net/pha.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-
-		echo "[PROC] Processing Cameleon list"
+		lognecho "[PROC] Processing Cameleon list"
 		MPGET "http://sysctl.org/cameleon/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing winhelp2002 list"
+		lognecho "[PROC] Processing winhelp2002 list"
 		MPGET "http://winhelp2002.mvps.org/hosts.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing someonewhocares list"
+		lognecho "[PROC] Processing someonewhocares list"
 		MPGET "http://someonewhocares.org/hosts/zero/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing anudeepND lists"
+		lognecho "[PROC] Processing anudeepND lists"
 		MPGETSSL "https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/anudeepND/blacklist/master/CoinMiner.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/anudeepND/youtubeadsblacklist/master/domainlist.txt" | GREPFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing CHEF-KOCH lists"
+		lognecho "[PROC] Processing CHEF-KOCH lists"
 		MPGETSSL "https://raw.githubusercontent.com/CHEF-KOCH/WebRTC-tracking/master/WebRTC.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/CHEF-KOCH/NSABlocklist/master/HOSTS/HOSTS" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/CHEF-KOCH/Audio-fingerprint-pages/master/AudioFp.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/CHEF-KOCH/Canvas-fingerprinting-pages/master/Canvas.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/CHEF-KOCH/Canvas-Font-Fingerprinting-pages/master/Canvas.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing joewein.de LLC list"
+		lognecho "[PROC] Processing joewein.de LLC list"
 		MPGETSSL "https://www.joewein.net/dl/bl/dom-bl-base.txt" | GREPFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing Windows telemetry lists"
+		lognecho "[PROC] Processing Windows telemetry lists"
 		MPGETSSL "https://raw.githubusercontent.com/tyzbit/hosts/master/data/tyzbit/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing smart TV blocklists"
+		lognecho "[PROC] Processing smart TV blocklists"
 		MPGETSSL "https://v.firebog.net/hosts/static/SamsungSmart.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/SmartTV.txt" | GREPFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing a few more blocklists"
+		lognecho "[PROC] Processing a few more blocklists"
 		MPGETSSL "https://raw.githubusercontent.com/vokins/yhosts/master/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/mitchellkrogza/Badd-Boyz-Hosts/master/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/piwik/referrer-spam-blacklist/master/spammers.txt" | GREPFILTER >> $TMPHOSTS
@@ -563,41 +552,40 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 	fi
 
 	if [ $BLITZ -ge 3 ]; then
-		echo "[PROC] Unlocking BLITZ=3 level lists"
+		lognecho "[PROC] Unlocking BLITZ=3 level lists"
 
-		echo "[PROC] Processing hosts-file PSH/PUP/WRZ lists"
-		MPGETSSL "https://hosts-file.net/psh.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://hosts-file.net/wrz.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
+		lognecho "[PROC] Processing dbl.oisd.nl list"
+		MPGETSSL "https://dbl.oisd.nl" | GREPFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing Mahakala list"
+		lognecho "[PROC] Processing Mahakala list"
 		MPGETMHK "http://adblock.mahakala.is/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing HostsFile.mine.nu list"
+		lognecho "[PROC] Processing HostsFile.mine.nu list"
 		MPGETSSL "https://hostsfile.mine.nu/hosts0.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		echo "[PROC] Processing Kowabit list"
+		lognecho "[PROC] Processing Kowabit list"
 		MPGETSSL "https://v.firebog.net/hosts/Kowabit.txt" | GREPFILTER >> $TMPHOSTS
 	fi
 
 	if [ $NOFB = "f" ]; then
-		echo "[PROC] Blocking Facebook and Messenger"
+		lognecho "[PROC] Blocking Facebook and Messenger"
 		MPGETSSL "https://raw.githubusercontent.com/m-parashar/adblock/master/blacklists/facebookonly.block" >> $TMPHOSTS
 	fi
 
 	if [ $NOFB = "F" ]; then
-		echo "[PROC] Blocking Facebook, Messenger, Instagram, WhatsApp"
+		lognecho "[PROC] Blocking Facebook, Messenger, Instagram, WhatsApp"
 		MPGETSSL "https://raw.githubusercontent.com/m-parashar/adblock/master/blacklists/facebookall.block" >> $TMPHOSTS
 	fi
 
 	if [ ! -s $TMPHOSTS ]; then
 		printFileSize $TMPHOSTS
 		printFileSize $TMPDOMAINS
-		echo "[ERROR] Check logs. Quitting."
+		lognecho "[ERROR] Check logs. Quitting."
 		logger "[INFO] $(basename "$0") finished"
 		exit 2
 	fi
 
-	echo "[PROC] Updating official blacklist/whitelist files"
+	lognecho "[PROC] Updating official blacklist/whitelist files"
 	MPGETSSL "https://raw.githubusercontent.com/m-parashar/adblock/master/blacklists/blacklist" | GREPFILTER > $BLACKLIST
 	MPGETSSL "https://raw.githubusercontent.com/m-parashar/adblock/master/whitelists/whitelist" | GREPFILTER > $WHITELIST
 
@@ -610,14 +598,14 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 	fi
 
 else
-	echo "[INFO] NETWORK: DOWN | MODE: OFFLINE"
+	lognecho "[INFO] NETWORK: DOWN | MODE: OFFLINE"
 	logger "[INFO] $(basename "$0") finished"
 	exit 0
 fi
 
 if [ $ONLINE -eq 0 ]; then
-	echo "[INFO] NETWORK: UP | MODE: OFFLINE"
-	echo "[INFO] OFFLINE PROCESSING"
+	lognecho "[INFO] NETWORK: UP | MODE: OFFLINE"
+	lognecho "[INFO] OFFLINE PROCESSING"
 	[ -s $MPHOSTS ] && cat $MPHOSTS | AWKFILTER > $TMPHOSTS
 	[ -s $MPDOMAINS ] && cp $MPDOMAINS $TMPDOMAINS
 	if [ $REMOTE_MODE -eq 1 ]; then
@@ -635,7 +623,7 @@ printFileSize $TMPHOSTS
 printFileSize $TMPDOMAINS
 
 # remove duplicates and extra whitespace, sort alphabetically
-echo "[PROC] Processing blacklist/whitelist files"
+lognecho "[PROC] Processing blacklist/whitelist files"
 LC_ALL=C cat $BLACKLIST | SEDCLEAN | sort | uniq > TMP_BLACKLIST && cp TMP_BLACKLIST $BLACKLIST
 LC_ALL=C cat $WHITELIST | SEDCLEAN | sort | uniq > TMP_WHITELIST && cp TMP_WHITELIST $WHITELIST
 
@@ -643,7 +631,7 @@ LC_ALL=C cat $WHITELIST | SEDCLEAN | sort | uniq > TMP_WHITELIST && cp TMP_WHITE
 # remove duplicates and extra whitespace, sort alphabetically
 # and allow users' myblacklist precedence over defaults
 if [ $DISTRIB -eq 0 ] && { [ -s "$MY_BLACKLIST" ] || [ -s "$MY_WHITELIST" ]; }; then
-	echo "[PROC] Processing myblacklist/mywhitelist files"
+	lognecho "[PROC] Processing myblacklist/mywhitelist files"
 	LC_ALL=C cat $MY_BLACKLIST | SEDCLEAN | sort | uniq > TMP_MYBLACKLIST && mv TMP_MYBLACKLIST $MY_BLACKLIST
 	LC_ALL=C cat $MY_WHITELIST | SEDCLEAN | sort | uniq > TMP_MYWHITELIST && mv TMP_MYWHITELIST $MY_WHITELIST
 	cat $BLACKLIST | cat $MY_BLACKLIST - > TMP_BLACKLIST
@@ -653,11 +641,11 @@ fi
 # trim leading and trailig whitespace, delete all blank lines including the ones with whitespace
 # remove non-printable non-ASCII characters because DD-WRT dnsmasq throws "bad name at line n" errors
 # merge blacklists with other lists and remove whitelist entries from the stream
-echo "[PROC] Processing final mphosts/mpdomains files"
+lognecho "[PROC] Processing final mphosts/mpdomains files"
 LC_ALL=C cat $TMPHOSTS | SEDCLEAN | cat TMP_BLACKLIST - | grep -Fvwf TMP_WHITELIST | sort | uniq | awk -v "IP=$ADHOLE_IP" '{sub(/\r$/,""); print IP" "$0}' > $MPHOSTS
 LC_ALL=C cat $TMPDOMAINS | SEDCLEAN | grep -Fvwf TMP_WHITELIST | sort | uniq > $MPDOMAINS
 
-echo "[PROC] Removing temporary files"
+lognecho "[PROC] Removing temporary files"
 rm -f $TMPHOSTS
 rm -f $TMPDOMAINS
 rm -f TMP_BLACKLIST
@@ -671,9 +659,9 @@ printFileSize $MPDOMAINS
 
 # Count how many domains/whitelists were added so it can be displayed to the user
 numHostsBlocked=$(cat $MPHOSTS | wc -l | sed 's/^[ \t]*//')
-echo "[INFO] Number of hosts blocked: approx $numHostsBlocked"
+lognecho "[INFO] Number of hosts blocked: approx $numHostsBlocked"
 numDomainsBlocked=$(cat $MPDOMAINS | wc -l | sed 's/^[ \t]*//')
-echo "[INFO] Number of domains blocked: approx $numDomainsBlocked"
+lognecho "[INFO] Number of domains blocked: approx $numDomainsBlocked"
 
 if [ $REMOTE_MODE -eq 1 ]; then
 	uploadRemote
@@ -685,15 +673,14 @@ restartDnsmasq
 TIMERSTOP=`date +%s`
 RTMINUTES=$(( $((TIMERSTOP - TIMERSTART)) /60 ))
 RTSECONDS=$(( $((TIMERSTOP - TIMERSTART)) %60 ))
-echo "[INFO] Total time: $RTMINUTES:$RTSECONDS minutes"
-echo "[INFO] DONE"
+lognecho "[INFO] Total time: $RTMINUTES:$RTSECONDS minutes"
+lognecho "[INFO] DONE"
 logger "[INFO] $(basename "$0") finished"
 
 # log errors if DEBUG is ON
 if [ $DEBUG -eq 1 ]; then
 	set +x
 fi
-) 2>&1 | tee $LOGFILE
 
 exit 0
 # FIN
