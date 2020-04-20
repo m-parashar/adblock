@@ -7,7 +7,7 @@
 # AUTHOR: Manish Parashar
 #
 # https://github.com/m-parashar/adblock
-# https://www.dd-wrt.com/phpBB2/viewtopic.php?t=307533
+# https://forum.dd-wrt.com/phpBB2/viewtopic.php?t=307533
 #
 # Thanks: List providers, contributors, and users.
 #
@@ -35,7 +35,7 @@
 # 0 6 * * 1,4 root /jffs/dnsmasq/adblock.sh
 #
 
-VERSION="20200407"
+VERSION="20200420"
 
 ###############################################################################
 
