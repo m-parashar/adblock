@@ -33,9 +33,8 @@
 # Go to Administration -> Cron (Sets the script to update itself. Choose your own schedule.)
 # Build the adblock files on MON and THU at 6AM
 # 0 6 * * 1,4 root /jffs/dnsmasq/adblock.sh
-#
 
-VERSION="20200420"
+VERSION="20201105"
 
 ###############################################################################
 
@@ -471,11 +470,6 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 		MPGETSSL "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/add.Risk/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/add.Spam/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		lognecho "[PROC] Processing dshield lists"
-		MPGETSSL "https://www.dshield.org/feeds/suspiciousdomains_High.txt" | GREPFILTER >> $TMPHOSTS
-		MPGETSSL "https://www.dshield.org/feeds/suspiciousdomains_Medium.txt" | GREPFILTER >> $TMPHOSTS
-		MPGETSSL "https://www.dshield.org/feeds/suspiciousdomains_Low.txt" | GREPFILTER >> $TMPHOSTS
-
 		lognecho "[PROC] Processing pgl.yoyo.org list"
 		MPGETSSL "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=unixhosts&showintro=0&mimetype=plaintext" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
@@ -525,11 +519,11 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 		MPGETSSL "https://raw.githubusercontent.com/anudeepND/youtubeadsblacklist/master/domainlist.txt" | GREPFILTER >> $TMPHOSTS
 
 		lognecho "[PROC] Processing CHEF-KOCH lists"
-		MPGETSSL "https://raw.githubusercontent.com/CHEF-KOCH/WebRTC-tracking/master/WebRTC.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://raw.githubusercontent.com/CHEF-KOCH/NSABlocklist/master/HOSTS/HOSTS" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://raw.githubusercontent.com/CHEF-KOCH/Audio-fingerprint-pages/master/AudioFp.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://raw.githubusercontent.com/CHEF-KOCH/Canvas-fingerprinting-pages/master/Canvas.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://raw.githubusercontent.com/CHEF-KOCH/Canvas-Font-Fingerprinting-pages/master/Canvas.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
+		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/hosts/Anti-FPT.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
+		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/hosts/Malware.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
+		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/hosts/coinminer.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
+		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/hosts/Ads-tracker.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
+		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/Anti-Corp/hosts/NSABlocklist.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
 		lognecho "[PROC] Processing joewein.de LLC list"
 		MPGETSSL "https://www.joewein.net/dl/bl/dom-bl-base.txt" | GREPFILTER >> $TMPHOSTS
@@ -575,6 +569,7 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 	if [ $NOFB = "F" ]; then
 		lognecho "[PROC] Blocking Facebook, Messenger, Instagram, WhatsApp"
 		MPGETSSL "https://raw.githubusercontent.com/m-parashar/adblock/master/blacklists/facebookall.block" >> $TMPHOSTS
+		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/Anti-Corp/hosts/Facebook.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 	fi
 
 	if [ ! -s $TMPHOSTS ]; then
