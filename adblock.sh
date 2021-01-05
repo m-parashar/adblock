@@ -330,7 +330,7 @@ selfUpdate ()
 export CMDARGS="$@"
 
 # process command line arguments
-while getopts "h?v0123fFdDpPrRsSoOuUb:w:i:-:" opt; do
+while getopts "h?v0123fFdDpPrRsSoOuUb:w:t:T:i:-:" opt; do
 	case ${opt} in
 		h|\? ) printHelp ;;
 		v    ) echo "$VERSION" ; logger "[INFO] $(basename "$0") finished" ; exit 0 ;;
