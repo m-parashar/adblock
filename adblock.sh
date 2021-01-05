@@ -276,6 +276,7 @@ printHelp ()
 	printf '\t'; echo -n "[-r | --resume]"; printf '\t\t\t'; echo "Resume protection"
 	printf '\t'; echo -n "[-s | --secure]"; printf '\t\t\t'; echo "Use cURL CA certs for secure file transfer"
 	printf '\t'; echo -n "[-o | --offline]"; printf '\t\t'; echo "Process local lists without downloading"
+	printf '\t'; echo -n "[-t | --tmp]"; printf '\t\t'; echo "Change tmp directory. Default /tmp if it exists, else current directory."
 	printf '\t'; echo -n "[-h | --help]"; printf '\t\t\t'; echo "Display this help screen and exit"
 	printf '\t'; echo -n "[-u | --update]"; printf '\t\t\t'; echo "Update $(basename "$0") to the latest version"
 	printf '\t'; echo -n "[-v | --version]"; printf '\t\t'; echo "Print $(basename "$0") version and exit"
@@ -292,7 +293,7 @@ printHelp ()
 # update to the latest version
 selfUpdate ()
 {
-	TMPFILE="/tmp/mpupdate"
+	TMPFILE="${TMPDIR}/mpupdate"
 
 	lognecho "[PROC] Checking for updates."
 
@@ -348,6 +349,7 @@ while getopts "h?v0123fFdDpPrRsSoOuUb:w:i:-:" opt; do
 		b    ) echo "$OPTARG" >> $MY_BLACKLIST ;;
 		w    ) echo "$OPTARG" >> $MY_WHITELIST ;;
 		i    ) ADHOLE_IP="$OPTARG" ;;
+		t|T  ) TMPDIR="$OPTARG" ;;
 		-    ) LONG_OPTARG="${OPTARG#*=}"
 		case $OPTARG in
 			bl=?*   ) ARG_BL="$LONG_OPTARG" ; echo $ARG_BL >> $MY_BLACKLIST ;;
@@ -359,6 +361,8 @@ while getopts "h?v0123fFdDpPrRsSoOuUb:w:i:-:" opt; do
 			remote=?*   ) ARG_RIP="$LONG_OPTARG" ; REMOTE_IP=$ARG_RIP
 						  REMOTE_MODE=1 ;;
 			remote*     ) echo "[ERROR] no arguments for --$OPTARG option" >&2; exit 2 ;;
+			tmp=?*  ) TMPDIR="$OPTARG" ;;
+			tmp     ) echo "[ERROR] no arguments for --$OPTARG option" >&2; exit 2 ;;
 			debug   ) DEBUG=1 ;;
 			wget    ) FORCEWGET=1 ;;
 			pause   ) protectOff ;;
