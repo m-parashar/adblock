@@ -34,7 +34,7 @@
 # Build the adblock files on MON and THU at 6AM
 # 0 6 * * 1,4 root /jffs/dnsmasq/adblock.sh
 
-VERSION="20201105"
+VERSION="20210204"
 
 ###############################################################################
 
@@ -456,8 +456,7 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 	MPGETSSL "https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-malware.txt" | GREPFILTER >> $TMPHOSTS
 
 	lognecho "[PROC] Processing MalwareDomains lists"
-	MPGETSSL "https://mirror1.malwaredomains.com/files/justdomains" | GREPFILTER >> $TMPHOSTS
-	MPGETSSL "https://mirror1.malwaredomains.com/files/immortal_domains.txt" | GREPFILTER >> $TMPHOSTS
+	MPGETSSL "https://mirror.cedia.org.ec/malwaredomains/immortal_domains.txt" | GREPFILTER >> $TMPHOSTS
 
 	lognecho "[PROC] Processing adaway list"
 	MPGETSSL "https://adaway.org/hosts.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
