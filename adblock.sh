@@ -34,7 +34,7 @@
 # Build the adblock files on MON and THU at 6AM
 # 0 6 * * 1,4 root /jffs/dnsmasq/adblock.sh
 
-VERSION="20210308"
+VERSION="20220518"
 
 ###############################################################################
 
@@ -484,8 +484,6 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 
 		lognecho "[PROC] Processing Easylist & w3kbl lists"
 		MPGETSSL "https://v.firebog.net/hosts/AdguardDNS.txt" | GREPFILTER >> $TMPHOSTS
-		MPGETSSL "https://v.firebog.net/hosts/Airelle-hrsk.txt" | GREPFILTER >> $TMPHOSTS
-		MPGETSSL "https://v.firebog.net/hosts/Airelle-trc.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://v.firebog.net/hosts/BillStearns.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://v.firebog.net/hosts/Easylist.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://v.firebog.net/hosts/Easyprivacy.txt" | GREPFILTER >> $TMPHOSTS
