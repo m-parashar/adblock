@@ -34,7 +34,7 @@
 # Build the adblock files on MON and THU at 6AM
 # 0 6 * * 1,4 root /jffs/dnsmasq/adblock.sh
 
-VERSION="20220518"
+VERSION="20230505"
 
 ###############################################################################
 
@@ -484,13 +484,12 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 
 		lognecho "[PROC] Processing Easylist & w3kbl lists"
 		MPGETSSL "https://v.firebog.net/hosts/AdguardDNS.txt" | GREPFILTER >> $TMPHOSTS
-		MPGETSSL "https://v.firebog.net/hosts/BillStearns.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://v.firebog.net/hosts/Easylist.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://v.firebog.net/hosts/Easyprivacy.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://v.firebog.net/hosts/Prigent-Ads.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://v.firebog.net/hosts/Prigent-Malware.txt" | GREPFILTER >> $TMPHOSTS
-		MPGETSSL "https://v.firebog.net/hosts/Prigent-Phishing.txt" | GREPFILTER >> $TMPHOSTS
-		MPGETSSL "https://v.firebog.net/hosts/Shalla-mal.txt" | GREPFILTER >> $TMPHOSTS
+		MPGETSSL "https://v.firebog.net/hosts/RPiList-Malware.txt" | GREPFILTER >> $TMPHOSTS
+		MPGETSSL "https://v.firebog.net/hosts/RPiList-Phishing.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://v.firebog.net/hosts/static/w3kbl.txt" | GREPFILTER >> $TMPHOSTS
 	fi
 
@@ -516,23 +515,14 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 		MPGETSSL "https://raw.githubusercontent.com/anudeepND/blacklist/master/CoinMiner.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/anudeepND/youtubeadsblacklist/master/domainlist.txt" | GREPFILTER >> $TMPHOSTS
 
-		lognecho "[PROC] Processing CHEF-KOCH lists"
-		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/hosts/Anti-FPT.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/hosts/Malware.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/hosts/coinminer.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/hosts/Ads-tracker.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/Anti-Corp/hosts/NSABlocklist.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
-
-		lognecho "[PROC] Processing joewein.de LLC list"
-		MPGETSSL "https://www.joewein.net/dl/bl/dom-bl-base.txt" | GREPFILTER >> $TMPHOSTS
-
 		lognecho "[PROC] Processing Windows telemetry lists"
 		MPGETSSL "https://raw.githubusercontent.com/tyzbit/hosts/master/data/tyzbit/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 
-		lognecho "[PROC] Processing smart TV blocklists"
-		MPGETSSL "https://v.firebog.net/hosts/static/SamsungSmart.txt" | GREPFILTER >> $TMPHOSTS
+		lognecho "[PROC] Processing Perflyst blocklists"
 		MPGETSSL "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/SmartTV.txt" | GREPFILTER >> $TMPHOSTS
+		MPGETSSL "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/AmazonFireTV.txt" | GREPFILTER >> $TMPHOSTS
+		MPGETSSL "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt" | GREPFILTER >> $TMPHOSTS
 
 		lognecho "[PROC] Processing a few more blocklists"
 		MPGETSSL "https://raw.githubusercontent.com/vokins/yhosts/master/hosts" | GREPFILTER | AWKFILTER >> $TMPHOSTS
@@ -540,7 +530,6 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 		MPGETSSL "https://raw.githubusercontent.com/piwik/referrer-spam-blacklist/master/spammers.txt" | GREPFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/HenningVanRaumle/pihole-ytadblock/master/ytadblock.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 		MPGETSSL "https://raw.githubusercontent.com/matomo-org/referrer-spam-blacklist/master/spammers.txt" | GREPFILTER >> $TMPHOSTS
-		MPGETSSL "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt" | GREPFILTER >> $TMPHOSTS
 	fi
 
 	if [ $BLITZ -ge 3 ]; then
@@ -567,7 +556,6 @@ if ping -q -c 1 -W 1 $PING_TARGET > /dev/null 2>&1; then
 	if [ $NOFB = "F" ]; then
 		lognecho "[PROC] Blocking Facebook, Messenger, Instagram, WhatsApp"
 		MPGETSSL "https://raw.githubusercontent.com/m-parashar/adblock/master/blacklists/facebookall.block" >> $TMPHOSTS
-		MPGETSSL "https://gitlab.com/CHEF-KOCH/cks-filterlist/-/raw/master/Anti-Corp/hosts/Facebook.txt" | GREPFILTER | AWKFILTER >> $TMPHOSTS
 	fi
 
 	if [ ! -s $TMPHOSTS ]; then
